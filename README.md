@@ -25,6 +25,11 @@ See `cryptanalysis.py` for the code (with examples).
 
 -->
 
+## TODO
+
+  * improve break_simple_substitution()!
+  * bigrams, trigrams, ...
+
 ## License
 
 GPLv3+ [1].
