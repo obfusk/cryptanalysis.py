@@ -1,13 +1,14 @@
 #!/usr/bin/python
+# encoding: latin-1
 
 # --                                                            ; {{{1
 #
 # File        : cryptanalysis.py
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2016-09-26
+# Date        : 2016-10-02
 #
 # Copyright   : Copyright (C) 2016  Felix C. Stegerman
-# Version     : v0.0.1
+# Version     : v0.0.2
 # License     : GPLv3+
 #
 # --                                                            ; }}}1
@@ -186,6 +187,31 @@ Rail fence cipher
 'wlsadooteeeceaeecrfinvedr'
 
 
+Vigenère cipher
+---------------
+
+>>> plaintext   = "attackatdawn"
+>>> key         = "lemon"
+>>> ciphertext  = vinegere_encrypt(plaintext, key)
+>>> ciphertext
+'lxfopvefrnhr'
+>>> vinegere_decrypt(ciphertext, key)
+'attackatdawn'
+
+
+Linear-feedback shift register
+------------------------------
+
+>>> state, taps = [0,1,1,1,1,0,1,1], [0,3,4]
+>>> for bit, state_ in itertools.islice(lfsr(state, taps), 5):
+...   print(bit, state_)
+0 [1, 1, 1, 1, 0, 1, 1, 0]
+1 [1, 1, 1, 0, 1, 1, 0, 0]
+1 [1, 1, 0, 1, 1, 0, 0, 0]
+1 [1, 0, 1, 1, 0, 0, 0, 1]
+1 [0, 1, 1, 0, 0, 0, 1, 0]
+
+
 Helper functions
 ----------------
 
@@ -206,25 +232,28 @@ Links
 =====
 
 https://en.wikipedia.org/wiki/Letter_frequency
+https://en.wikipedia.org/wiki/Linear-feedback_shift_register
 https://en.wikipedia.org/wiki/Substitution_cipher
 https://en.wikipedia.org/wiki/Transposition_cipher
 https://en.wikipedia.org/wiki/Transposition_cipher#Columnar_transposition
 https://en.wikipedia.org/wiki/Transposition_cipher#Rail_Fence_cipher
+https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher
 """
                                                                 # }}}1
 
 from __future__ import print_function
 
-import argparse, itertools, math, random, sys
+import argparse, functools, itertools, math, random, sys
 
 if sys.version_info.major == 2:                                 # {{{1
   izip    = itertools.izip
 else:
   xrange  = range
   izip    = zip
+  reduce  = functools.reduce
                                                                 # }}}1
 
-__version__       = "0.0.1"
+__version__       = "0.0.2"
 
 
 def main(*args):                                                # {{{1
@@ -373,9 +402,32 @@ def rail_fence_decrypt(ciphertext, n):
   return string_if([ ciphertext[i] for i in decryption ], ciphertext)
 
 
+def vinegere_encrypt(plaintext, key):
+  """Encrypts a plaintext using a Vigenère cipher and return the
+  resulting ciphertext."""
+  plaintext = sanitize(plaintext); key = sanitize(key); a = ord('a')
+  return "".join( chr(a + ((ord(m)-a + ord(k)-a) % 26))
+                  for m, k in izip(plaintext, itertools.cycle(key)) )
+
+def vinegere_decrypt(ciphertext, key):
+  """Decrypts a ciphertext using a Vigenère cipher and return the
+  resulting plaintext."""
+  ciphertext = sanitize(ciphertext); key = sanitize(key); a = ord('a')
+  return "".join( chr(a + ((ord(m) - ord(k)) % 26))
+                  for m, k in izip(ciphertext, itertools.cycle(key)) )
+
+
+def lfsr(state, taps):
+  """Linear-feedback shift register."""
+  while True:
+    newbit          = reduce(lambda x, y: x ^ state[y], taps, 0)
+    oldbit, state   = state[0], state[1:] + [newbit]
+    yield oldbit, state
+
+
 def sanitize(plaintext, keep = []):
   """Returns sanitized plaintext; i.e. alphabetic characters only, all
-  lowercase."""
+  in lowercase."""
   return "".join( c.lower() for c in plaintext
                   if c.lower() in ALPHAS or c.lower() in keep )
 
