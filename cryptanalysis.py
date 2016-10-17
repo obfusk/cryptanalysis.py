@@ -5,10 +5,10 @@
 #
 # File        : cryptanalysis.py
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2016-10-02
+# Date        : 2016-10-16
 #
 # Copyright   : Copyright (C) 2016  Felix C. Stegerman
-# Version     : v0.0.2
+# Version     : v0.0.3
 # License     : GPLv3+
 #
 # --                                                            ; }}}1
@@ -212,6 +212,120 @@ Linear-feedback shift register
 1 [0, 1, 1, 0, 0, 0, 1, 0]
 
 
+Block Ciphers
+-------------
+
+>>> k           = 0b101
+>>> plaintext   = [0b011, 0b111, 0b101, 0b001]
+>>> ciphertext  = ECB(plaintext, k)
+>>> bs(ciphertext)
+['100', '011', '001', '010']
+>>> for x, (y, z) in zip(plaintext, ECB_int(plaintext, k)):
+...   print("C({}, {}) = {} (w/ x ^ k = {})".format(*bs([x, k, z, y])))
+C(011, 101) = 100 (w/ x ^ k = 110)
+C(111, 101) = 011 (w/ x ^ k = 010)
+C(101, 101) = 001 (w/ x ^ k = 000)
+C(001, 101) = 010 (w/ x ^ k = 100)
+
+>>> list(ECB_inv(ECB(plaintext, k), k)) == plaintext
+True
+
+>>> iv          = 0b111
+>>> ciphertext  = CBC(plaintext, k, iv)
+>>> bs(ciphertext)
+['000', '011', '110', '011']
+>>> for x, (y, z) in zip(plaintext, CBC_int(plaintext, k, iv)):
+...   print("C({}, {}) = {} (w/ x ^ z = {})".format(*bs([x, k, z, y])))
+C(011, 101) = 000 (w/ x ^ z = 100)
+C(111, 101) = 011 (w/ x ^ z = 111)
+C(101, 101) = 110 (w/ x ^ z = 110)
+C(001, 101) = 011 (w/ x ^ z = 111)
+
+>>> list(CBC_inv(CBC(plaintext, k, iv), k, iv)) == plaintext
+True
+
+>>> bin_(CBC_MAC(plaintext, k, iv))
+'011'
+>>> m0 = C_inv(iv, k) ^ iv
+>>> bin_(m0)
+'111'
+>>> bin_(CBC_MAC([m0] + plaintext, k, iv))
+'011'
+
+>>> import random
+>>> ok = 0
+>>> for x in xrange(1000):
+...   k   = random.randint(0b000, 0b111)
+...   iv  = random.randint(0b000, 0b111)
+...   m   = [0b111, 0b100, 0b101]
+...   t   = CBC_MAC(m, k, iv)
+...   m1  = [0b011, 0b111, 0b101, 0b001]
+...   t1  = CBC_MAC(m1, k, iv)
+...   m2  = m + [t ^ m1[0] ^ iv] + m1[1:]
+...   t2  = CBC_MAC(m2, k, iv)
+...   if t1 == t2: ok += 1
+>>> ok
+1000
+
+>>> k           = 0b100
+>>> iv          = 0b010
+>>> alice_ct    = [0b111, 0b100, 0b101]
+>>> bob_ct      = [0b110, 0b100, 0b101]
+>>> third_ct    = [0b011, 0b100, 0b101]
+>>> alice_pt    = list(CBC_inv(alice_ct, k, iv))
+>>> bob_pt      = list(CBC_inv(bob_ct, k, iv))
+>>> third_pt    = list(CBC_inv(third_ct, k, iv))
+>>> bs(alice_pt)
+['011', '101', '111']
+>>> bs(bob_pt)
+['101', '100', '111']
+>>> bs(third_pt)
+['100', '001', '111']
+>>> hamming_distance("".join(bs(alice_pt)), "".join(bs(bob_pt)))
+3
+>>> hamming_distance("".join(bs(alice_pt)), "".join(bs(third_pt)))
+4
+
+>>> from itertools import islice
+>>> k           = 0b101
+>>> iv          = 0b100
+>>> bs(islice(CTR_stream(k, iv), 3))
+['000', '001', '110']
+>>> for x, y in islice(CTR_stream_int(k, iv), 3):
+...   print("{} (w/ ctr = {})".format(*bs([y, x])))
+000 (w/ ctr = 100)
+001 (w/ ctr = 101)
+110 (w/ ctr = 110)
+
+>>> plaintext   = [0b001, 0b110, 0b111]
+>>> ciphertext  = CTR_inv(plaintext, k, iv)
+>>> bs(ciphertext)
+['001', '111', '001']
+>>> for x, y, z, xor in CTR_inv_int(plaintext, k, iv):
+...   print("{} ^ {} = {} (w/ ctr = {})".format(*bs([x, z, xor, y])))
+001 ^ 000 = 001 (w/ ctr = 100)
+110 ^ 001 = 111 (w/ ctr = 101)
+111 ^ 110 = 001 (w/ ctr = 110)
+
+>>> p1  = [0b010, 0b110, 0b110]
+>>> c1  = [0b110, 0b001, 0b101]
+>>> c2  = [0b101, 0b011, 0b111]
+>>> ks  = [ p ^ c for p,c in zip(p1, c1) ]
+>>> bs(ks)
+['100', '111', '011']
+>>> p2  = [ c ^ k for c,k in zip(c2, ks) ]
+>>> bs(p2)
+['001', '100', '100']
+
+>>> [ p ^ k for p,k in zip(p1, ks) ] == c1
+True
+>>> [ p ^ k for p,k in zip(p2, ks) ] == c2
+True
+
+>>> list(CTR_inv(CTR(plaintext, k, iv), k, iv)) == plaintext
+True
+
+
 Helper functions
 ----------------
 
@@ -231,6 +345,8 @@ Helper functions
 Links
 =====
 
+https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
+https://en.wikipedia.org/wiki/Hamming_distance
 https://en.wikipedia.org/wiki/Letter_frequency
 https://en.wikipedia.org/wiki/Linear-feedback_shift_register
 https://en.wikipedia.org/wiki/Substitution_cipher
@@ -253,7 +369,7 @@ else:
   reduce  = functools.reduce
                                                                 # }}}1
 
-__version__       = "0.0.2"
+__version__       = "0.0.3"
 
 
 def main(*args):                                                # {{{1
@@ -423,6 +539,75 @@ def lfsr(state, taps):
     newbit          = reduce(lambda x, y: x ^ state[y], taps, 0)
     oldbit, state   = state[0], state[1:] + [newbit]
     yield oldbit, state
+
+
+def ECB_int(xs, k): return ( C_int(x, k) for x in xs )
+def ECB(xs, k): return ( y[-1] for y in ECB_int(xs, k) )
+
+def ECB_inv_int(ys, k): return ( C_inv_int(y, k) for y in ys )
+def ECB_inv(ys, k): return ( x[-1] for x in ECB_inv_int(ys, k) )
+
+def CBC_int(xs, k, iv):
+  z = iv
+  for x in xs:
+    y = x ^ z; z = C(y, k); yield y, z
+
+def CBC(xs, k, iv): return ( y[-1] for y in CBC_int(xs, k, iv) )
+
+def CBC_inv_int(ys, k, iv):
+  z = iv
+  for y in ys:
+    t = C_inv(y, k); x = t ^ z; z = y; yield t, x
+
+def CBC_inv(ys, k, iv): return ( x[-1] for x in CBC_inv_int(ys, k, iv) )
+
+def CBC_MAC(xs, k, iv):
+  mac = 0
+  for y in CBC(xs, k, iv): mac = y
+  return mac
+
+def CTR_stream_int(k, iv, n = 3):
+  while True:
+    yield iv, C(iv, k); iv = (iv + 1) % 2**n
+
+def CTR_stream(k, iv, n = 3): return ( y[-1] for y in CTR_stream_int(k, iv, n) )
+
+def CTR_int(xs, k, iv, n = 3):
+  for x, (y, z) in izip(xs, CTR_stream_int(k, iv, n)):
+    yield x, y, z, x ^ z
+
+def CTR(xs, k, iv, n = 3): return ( y[-1] for y in CTR_int(xs, k, iv, n) )
+
+CTR_inv_int, CTR_inv = CTR_int, CTR
+
+def C_int(x, k): return x ^ k, S[x ^ k]
+def C_inv_int(y, k): return S_inv[y], S_inv[y] ^ k
+
+def C(x, k): return C_int(x, k)[-1]
+def C_inv(y, k): return C_inv_int(y, k)[-1]
+
+S = {                                                           # {{{1
+  0b000: 0b001,
+  0b001: 0b000,
+  0b010: 0b011,
+  0b011: 0b110,
+  0b100: 0b010,
+  0b101: 0b111,
+  0b110: 0b100,
+  0b111: 0b101,
+}                                                               # }}}1
+
+S_inv = dict( (v,k) for k,v in S.items() )
+
+
+def bin_(x, n = 3): return ("0"*n + bin(x)[2:])[-n:]
+def bs(xs, n = 3): return [ bin_(x, n) for x in xs ]
+
+def hamming_distance(xs, ys):
+  n = 0
+  for x, y in zip(xs, ys):
+    if x != y: n += 1
+  return n
 
 
 def sanitize(plaintext, keep = []):

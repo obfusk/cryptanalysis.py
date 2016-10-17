@@ -2,10 +2,10 @@
 
     File        : README.md
     Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-    Date        : 2016-09-26
+    Date        : 2016-10-16
 
     Copyright   : Copyright (C) 2016  Felix C. Stegerman
-    Version     : v0.0.1
+    Version     : v0.0.3
 
 []: }}}1
 
