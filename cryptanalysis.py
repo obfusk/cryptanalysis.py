@@ -5,7 +5,7 @@
 #
 # File        : cryptanalysis.py
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2016-10-16
+# Date        : 2016-10-20
 #
 # Copyright   : Copyright (C) 2016  Felix C. Stegerman
 # Version     : v0.0.3
@@ -373,13 +373,13 @@ __version__       = "0.0.3"
 
 
 def main(*args):                                                # {{{1
-  p = argument_parser(); n = p.parse_args(args)
+  p = _argument_parser(); n = p.parse_args(args)
   import doctest
   doctest.testmod(verbose = n.verbose)
   return 0
                                                                 # }}}1
 
-def argument_parser():                                          # {{{1
+def _argument_parser():                                         # {{{1
   p = argparse.ArgumentParser(description = "cryptanalysis")
   p.add_argument("--version", action = "version",
                  version = "%(prog)s {}".format(__version__))

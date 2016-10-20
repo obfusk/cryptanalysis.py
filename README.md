@@ -2,7 +2,7 @@
 
     File        : README.md
     Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-    Date        : 2016-10-16
+    Date        : 2016-10-20
 
     Copyright   : Copyright (C) 2016  Felix C. Stegerman
     Version     : v0.0.3
@@ -10,6 +10,7 @@
 []: }}}1
 
 <!-- badge? -->
+[![Build Status](https://travis-ci.org/obfusk/cryptanalysis.py.png)](https://travis-ci.org/obfusk/cryptanalysis.py)
 
 ## Description
 
