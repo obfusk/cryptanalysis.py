@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# encoding: latin-1
+# encoding: utf8
 
 # --                                                            ; {{{1
 #
@@ -187,7 +187,7 @@ Rail fence cipher
 'wlsadooteeeceaeecrfinvedr'
 
 
-Vigenère cipher
+VigenÃ¨re cipher
 ---------------
 
 >>> plaintext   = "attackatdawn"
@@ -519,14 +519,14 @@ def rail_fence_decrypt(ciphertext, n):
 
 
 def vinegere_encrypt(plaintext, key):
-  """Encrypts a plaintext using a Vigenère cipher and return the
+  """Encrypts a plaintext using a VigenÃ¨re cipher and return the
   resulting ciphertext."""
   plaintext = sanitize(plaintext); key = sanitize(key); a = ord('a')
   return "".join( chr(a + ((ord(m)-a + ord(k)-a) % 26))
                   for m, k in izip(plaintext, itertools.cycle(key)) )
 
 def vinegere_decrypt(ciphertext, key):
-  """Decrypts a ciphertext using a Vigenère cipher and return the
+  """Decrypts a ciphertext using a VigenÃ¨re cipher and return the
   resulting plaintext."""
   ciphertext = sanitize(ciphertext); key = sanitize(key); a = ord('a')
   return "".join( chr(a + ((ord(m) - ord(k)) % 26))
