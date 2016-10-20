@@ -26,6 +26,15 @@ See `cryptanalysis.py` for the code (with examples).
 
 -->
 
+## Specs & Docs
+
+```bash
+$ python cryptanalysis.py -v                # run tests
+$ python -mcoverage run cryptanalysis.py    # test coverage
+$ python -mcoverage html                    # generate html report
+$ pydoc cryptanalysis.py                    # view docs
+```
+
 ## TODO
 
   * improve break_simple_substitution()!
